@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GuruGen AI - AI Generator Dokumen Guru</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M9 3h6v2h-2v2h4.5A3.5 3.5 0 0 1 21 10.5v5A3.5 3.5 0 0 1 17.5 19h-11A3.5 3.5 0 0 1 3 15.5v-5A3.5 3.5 0 0 1 6.5 7H11V5H9V3Z" />
+              <path d="M8.5 12.2a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM15.5 12.2a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM9 15.3c1.8 1.1 4.2 1.1 6 0" />
+            </svg>
+          </div>
+          <div>
+            <h1>GuruGen AI</h1>
+            <p>AI Generator untuk Guru</p>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Navigasi utama">
+          <a href="#" class="nav-item active" data-view-target="home">
+            <span class="icon" data-icon="home"></span>
+            Home
+          </a>
+          <a href="#" class="nav-item" data-view-target="create">
+            <span class="icon" data-icon="file-plus"></span>
+            Buat Dokumen
+          </a>
+          <a href="#" class="nav-item" data-view-target="history">
+            <span class="icon" data-icon="clock"></span>
+            Riwayat Dokumen
+          </a>
+        </nav>
+
+        <div class="admin-side hidden" id="adminSide">
+          <div class="admin-side-icon">
+            <span class="icon" data-icon="list"></span>
+          </div>
+          <strong>Rekap Data Pengguna</strong>
+          <small>Kuota generate per tanggal</small>
+          <div class="admin-side-menu">
+            <button class="admin-menu active" type="button" data-admin-section="members">Home / Daftar Anggota</button>
+            <button class="admin-menu" type="button" data-admin-section="records">Rekam Generate</button>
+            <button class="admin-menu" type="button" data-admin-section="tokens">Sisa Token</button>
+          </div>
+        </div>
+
+        <button class="profile-card" id="logoutButton" type="button">
+          <span class="avatar">SA</span>
+          <span>
+            <strong>Seftyan Adi Anwar</strong>
+            <small>Guru</small>
+          </span>
+          <span class="icon" data-icon="chevron-down"></span>
+        </button>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <h2 id="pageTitle">Home</h2>
+            <p id="pageSubtitle">Masuk menggunakan kode akses dari admin</p>
+          </div>
+          <div class="top-actions">
+            <button class="icon-button" id="themeToggle" type="button" aria-label="Mode gelap atau terang">
+              <span class="icon" data-icon="moon"></span>
+            </button>
+            <button class="icon-button alert" id="notificationButton" type="button" aria-label="Notifikasi">
+              <span class="badge" id="notificationBadge">2</span>
+              <span class="icon" data-icon="bell"></span>
+            </button>
+            <div class="notification-popover hidden" id="notificationPopover">
+              <strong>Pemberitahuan</strong>
+              <p>Batas generate gratis: 5 dokumen per hari.</p>
+              <p>Riwayat tersimpan di browser perangkat ini.</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="panel home-panel app-view active" data-view="home">
+          <div class="login-card">
+            <h3>Login Guru</h3>
+            <p>Masukkan kode pengguna permanen yang diberikan oleh admin. Nama akan mengikuti data pendaftaran admin.</p>
+            <label>
+              Nama Pengguna
+              <input id="loginName" placeholder="Opsional jika sudah terdaftar oleh admin" />
+            </label>
+            <label>
+              Kode Pengguna
+              <input id="loginCode" placeholder="Masukkan kode pengguna dari admin" />
+            </label>
+            <button class="primary full" id="loginButton" type="button">Masuk</button>
+            <p class="login-state" id="loginState">Belum login.</p>
+          </div>
+          <div class="welcome-card">
+            <h3>Generator Dokumen Guru</h3>
+            <p>Buat LKPD, modul ajar, ATP, Prota, Promes, KKTP, dan kisi-kisi soal dari satu form terstruktur.</p>
+            <div class="feature-list">
+              <span>Generate 5 dokumen per hari</span>
+              <span>Ekspor Word dan PDF</span>
+              <span>Riwayat tersimpan di perangkat</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel admin-panel app-view" data-view="admin">
+          <div class="admin-card admin-section active" data-admin-panel="members">
+            <h3>Admin: Daftarkan Guru</h3>
+            <p>Halaman ini tidak tampil di menu guru. Buka melalui hash khusus <strong>#admin</strong> untuk membuat kode pengguna permanen.</p>
+            <div class="form-grid one-column">
+              <label>
+                Nama Guru
+                <input id="adminTeacherName" placeholder="Nama guru yang didaftarkan" />
+              </label>
+              <label>
+                Berlaku untuk
+                <select id="adminRole">
+                  <option>Guru</option>
+                  <option>Admin Sekolah</option>
+                </select>
+              </label>
+            </div>
+            <button class="secondary" id="generateTokenButton" type="button">Generate Kode Akses</button>
+            <div class="token-box" id="tokenBox">Kode pengguna permanen akan muncul di sini.</div>
+            <div class="access-list" id="accessList"></div>
+          </div>
+          <div class="admin-card admin-section" data-admin-panel="records">
+            <h3>Rekap Kuota Pengguna</h3>
+            <p>Rekap penggunaan generate dokumen berdasarkan ID pengguna dan tanggal.</p>
+            <div class="usage-table" id="usageTable"></div>
+            <h3>Notifikasi Generate</h3>
+            <p>Setiap pengguna yang berhasil generate dokumen akan masuk ke daftar ini.</p>
+            <div class="admin-notice-list" id="adminNoticeList"></div>
+          </div>
+          <div class="admin-card admin-section" data-admin-panel="tokens">
+            <h3>Sisa Token API</h3>
+            <p>Estimasi token API yang tersedia untuk generate online.</p>
+            <div class="api-token-card">
+              <strong id="apiTokenRemaining">100000</strong>
+              <span>token tersisa</span>
+            </div>
+            <div class="server-status" id="serverStatus">Status server AI belum diperiksa.</div>
+            <div class="form-grid one-column">
+              <label>
+                Atur Limit Token API
+                <input id="apiTokenLimit" type="number" min="0" step="1000" value="100000" />
+              </label>
+            </div>
+            <button class="secondary" id="saveApiTokenLimit" type="button">Simpan Limit Token</button>
+          </div>
+        </section>
+
+        <section class="main-grid app-view" data-view="create">
+          <form class="panel builder-card" id="documentForm">
+            <div class="steps" id="steps" aria-label="Langkah pembuatan dokumen">
+              <button class="step active" type="button" data-step="0">
+                <span>1</span>
+                <strong>Identitas</strong>
+                <small>Data pembelajaran</small>
+              </button>
+              <button class="step" type="button" data-step="1">
+                <span>2</span>
+                <strong>Detail</strong>
+                <small>Materi & kompetensi</small>
+              </button>
+              <button class="step" type="button" data-step="2">
+                <span>3</span>
+                <strong>Generate</strong>
+                <small>AI membuat dokumen</small>
+              </button>
+            </div>
+
+            <div class="step-panel active" data-panel="0">
+              <h3>Identitas Pembelajaran</h3>
+              <div class="form-grid">
+                <label>
+                  Nama Sekolah
+                  <input name="school" value="SMP Negeri 1 Wangon" />
+                </label>
+                <label>
+                  Nama Guru
+                  <input name="teacher" value="Seftyan Adi Anwar" />
+                </label>
+                <label>
+                  Jenjang
+                  <select name="level">
+                    <option>SMP</option>
+                    <option>SD</option>
+                    <option>SMA</option>
+                    <option>SMK</option>
+                  </select>
+                </label>
+                <label>
+                  Kelas
+                  <input name="className" value="VIII" />
+                </label>
+                <label>
+                  Semester
+                  <select name="semester">
+                    <option>1 (Ganjil)</option>
+                    <option>2 (Genap)</option>
+                  </select>
+                </label>
+                <label>
+                  Tahun Pelajaran
+                  <input name="year" value="2026/2027" />
+                </label>
+                <label>
+                  Kurikulum
+                  <select name="curriculum">
+                    <option>Kurikulum Merdeka</option>
+                    <option>Kurikulum 2013</option>
+                  </select>
+                </label>
+                <label>
+                  Jenis Dokumen
+                  <select name="docType">
+                    <option>LKPD (Lembar Kerja Peserta Didik)</option>
+                    <option>Modul Ajar</option>
+                    <option>ATP</option>
+                    <option>Prota</option>
+                    <option>Promes</option>
+                    <option>KKTP</option>
+                    <option>Kisi-kisi Soal</option>
+                  </select>
+                </label>
+                <label>
+                  Mata Pelajaran
+                  <input name="subject" value="Informatika" />
+                </label>
+                <label>
+                  Alokasi Waktu
+                  <input name="duration" value="2 JP (2 x 40 menit)" />
+                </label>
+              </div>
+
+              <h3>Materi Pembelajaran</h3>
+              <div class="form-grid one-column">
+                <label>
+                  Materi Utama
+                  <input name="topic" value="Analisis Data" />
+                </label>
+                <label>
+                  Submateri
+                  <textarea name="subtopic" rows="3">Konsep dasar dan fungsi lembar kerja pengolah data
+Menggunakan Microsoft Excel untuk mengolah data sederhana</textarea>
+                </label>
+              </div>
+            </div>
+
+            <div class="step-panel" data-panel="1">
+              <h3>Detail Kompetensi</h3>
+              <div class="form-grid one-column">
+                <label>
+                  Tujuan Pembelajaran
+                  <textarea name="learningObjectives" rows="4">Peserta didik mampu memahami konsep dasar analisis data, membaca data sederhana, dan menggunakan aplikasi pengolah angka untuk menyajikan informasi.</textarea>
+                </label>
+                <label>
+                  Aktivitas Pembelajaran
+                  <textarea name="activities" rows="4">Diskusi pemantik, eksplorasi contoh data, praktik membuat tabel, refleksi hasil kerja.</textarea>
+                </label>
+              </div>
+              <div class="form-grid compact-grid">
+                <label data-detail-field="questionCount">
+                  Jumlah Soal Latihan
+                  <input name="questionCount" type="number" min="0" max="100" value="5" />
+                </label>
+                <label data-detail-field="questionType">
+                  Jenis Soal
+                  <select name="questionType">
+                    <option>Uraian</option>
+                    <option>Isian Singkat</option>
+                    <option>Pilihan Ganda</option>
+                    <option>Tabel</option>
+                    <option>Studi Kasus</option>
+                    <option>Campuran</option>
+                  </select>
+                </label>
+                <label data-detail-field="learningModel">
+                  Model Pembelajaran
+                  <select name="learningModel">
+                    <option>Problem Based Learning</option>
+                    <option>Project Based Learning</option>
+                    <option>Discovery Learning</option>
+                    <option>Kooperatif</option>
+                  </select>
+                </label>
+                <label data-detail-field="assessment">
+                  Asesmen
+                  <select name="assessment">
+                    <option>Diagnostik, formatif, dan sumatif</option>
+                    <option>Formatif dan produk</option>
+                    <option>Observasi dan rubrik</option>
+                  </select>
+                </label>
+                <label data-detail-field="tone">
+                  Gaya Bahasa
+                  <select name="tone">
+                    <option>Formal dan mudah dipahami</option>
+                    <option>Ringkas dan praktis</option>
+                    <option>Interaktif untuk siswa</option>
+                  </select>
+                </label>
+                <label data-detail-field="length">
+                  Panjang Hasil
+                  <select name="length">
+                    <option>Standar</option>
+                    <option>Ringkas</option>
+                    <option>Lengkap</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="step-panel" data-panel="2">
+              <h3>Generate Dokumen</h3>
+              <div class="generate-box">
+                <div class="ai-orb" aria-hidden="true">
+                  <span class="icon" data-icon="sparkles"></span>
+                </div>
+                <div>
+                  <strong>Siap membuat dokumen pembelajaran</strong>
+                  <p>GuruGen akan menyusun identitas, tujuan, aktivitas, asesmen, dan lampiran sesuai data yang sudah diisi.</p>
+                  <p class="quota-text" id="quotaText">Sisa generate hari ini: 5/5</p>
+                  <p class="ai-status" id="aiStatus">AI online belum diperiksa.</p>
+                </div>
+              </div>
+              <div class="prompt-card">
+                <label>
+                  Instruksi Tambahan untuk AI
+                  <textarea name="extraInstruction" rows="5" placeholder="Contoh: buat aktivitas lebih kontekstual, gunakan contoh data nilai ulangan, tambahkan rubrik sederhana.">Tambahkan contoh kegiatan yang dekat dengan kehidupan siswa dan gunakan bahasa yang jelas.</textarea>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions split-actions">
+              <button class="secondary" id="prevButton" type="button">Kembali</button>
+              <button class="primary" id="nextButton" type="button">
+                Lanjut ke Detail
+                <span class="icon" data-icon="arrow-right"></span>
+              </button>
+              <button class="primary hidden" id="generateButton" type="submit">
+                Generate Dokumen
+                <span class="icon" data-icon="sparkles"></span>
+              </button>
+            </div>
+          </form>
+
+          <section class="panel result-card">
+            <div class="result-header">
+              <div>
+                <h3>Hasil Dokumen</h3>
+                <span class="status" id="resultStatus"><span class="dot"></span>Draft siap</span>
+              </div>
+              <div class="document-actions">
+                <button type="button" id="wordButton">
+                  <span class="file-badge word">W</span>
+                  Download Word
+                </button>
+                <button type="button" id="pdfButton">
+                  <span class="file-badge pdf">P</span>
+                  Download PDF
+                </button>
+              </div>
+            </div>
+
+            <article class="document-preview" id="documentPreview" contenteditable="true" spellcheck="false"></article>
+          </section>
+        </section>
+
+        <section class="panel history-panel app-view" data-view="history">
+          <div>
+            <h3>Riwayat Lokal</h3>
+            <p>Dokumen yang disimpan akan tersimpan di browser perangkat ini.</p>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
+  </body>
+</html>

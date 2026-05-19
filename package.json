@@ -1,0 +1,14 @@
+{
+  "name": "gurugen-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI generator dokumen guru dengan panel admin, kuota harian, dan OpenAI backend.",
+  "main": "serve.js",
+  "scripts": {
+    "start": "node serve.js",
+    "check": "node --check serve.js && node --check script.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

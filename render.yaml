@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: gurugen-ai
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: OPENAI_MODEL
+        value: gpt-4.1
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ADMIN_PIN
+        sync: false
