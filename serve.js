@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 4173);
-const host = process.env.HOST || "127.0.0.1";
+const host = process.env.HOST || (process.env.PORT ? "0.0.0.0" : "127.0.0.1");
 const dailyLimit = 5;
 const dataDir = path.join(root, "data");
 const dbPath = path.join(dataDir, "gurugen-db.json");
@@ -56,6 +56,56 @@ function readDb() {
 function writeDb(db) {
   fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+}
+
+function hasSupabase() {
+  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+function supabaseHeaders() {
+  return {
+    apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+    "Content-Type": "application/json"
+  };
+}
+
+async function loadDb() {
+  if (!hasSupabase()) return readDb();
+
+  const baseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}/rest/v1/gurugen_app_state?id=eq.main&select=data`, {
+    headers: supabaseHeaders()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase gagal membaca data: ${await response.text()}`);
+  }
+
+  const rows = await response.json();
+  if (rows[0]?.data) return { ...defaultDb(), ...rows[0].data };
+
+  const db = defaultDb();
+  await saveDb(db);
+  return db;
+}
+
+async function saveDb(db) {
+  if (!hasSupabase()) {
+    writeDb(db);
+    return;
+  }
+
+  const baseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}/rest/v1/gurugen_app_state`, {
+    method: "POST",
+    headers: { ...supabaseHeaders(), Prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({ id: "main", data: db })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase gagal menyimpan data: ${await response.text()}`);
+  }
 }
 
 function normalizeAccessCode(value) {
@@ -257,7 +307,7 @@ async function handleGenerate(request, response) {
   try {
     const payload = await readJson(request);
     const data = payload.form || payload;
-    const db = readDb();
+    const db = await loadDb();
     const user = findUser(db, payload.session?.accessCode || payload.accessCode);
     if (!user) {
       sendJson(response, 401, { error: "Login tidak valid. Silakan masuk ulang memakai kode dari admin." });
@@ -293,7 +343,7 @@ async function handleGenerate(request, response) {
     const html = result.output_text || result.output?.flatMap((item) => item.content || []).map((item) => item.text || "").join("") || "";
     const tokens = result.usage?.total_tokens || (result.usage?.input_tokens || 0) + (result.usage?.output_tokens || 0);
     const recorded = recordGenerate(db, user, data, html, "openai", tokens);
-    writeDb(db);
+    await saveDb(db);
     sendJson(response, 200, {
       html,
       usage: result.usage || null,
@@ -307,7 +357,7 @@ async function handleGenerate(request, response) {
 
 async function handleLogin(request, response) {
   const payload = await readJson(request);
-  const db = readDb();
+  const db = await loadDb();
   const user = findUser(db, payload.code);
   if (!user) {
     sendJson(response, 401, { error: "Kode pengguna tidak terdaftar. Minta admin membuat kode akses." });
@@ -316,7 +366,7 @@ async function handleLogin(request, response) {
   user.loginCount = (user.loginCount || 0) + 1;
   user.lastLoginBy = payload.name || user.teacher;
   user.lastLoginAt = new Date().toISOString();
-  writeDb(db);
+  await saveDb(db);
   sendJson(response, 200, {
     session: { name: user.teacher, role: user.role || "Guru", accessCode: user.code, loginAt: new Date().toISOString() },
     state: userState(db, user.code)
@@ -325,7 +375,7 @@ async function handleLogin(request, response) {
 
 async function handleCreateUser(request, response) {
   const payload = await readJson(request);
-  const db = readDb();
+  const db = await loadDb();
   const user = {
     code: generateAccessCode(db.users),
     teacher: String(payload.teacher || "Guru Baru").trim() || "Guru Baru",
@@ -334,47 +384,52 @@ async function handleCreateUser(request, response) {
     loginCount: 0
   };
   db.users.unshift(user);
-  writeDb(db);
+  await saveDb(db);
   sendJson(response, 200, { user, state: adminState(db) });
 }
 
 async function handleDeleteUser(request, response) {
   const payload = await readJson(request);
   const code = normalizeAccessCode(payload.code);
-  const db = readDb();
+  const db = await loadDb();
   db.users = db.users.filter((user) => normalizeAccessCode(user.code) !== code);
   delete db.usage[code];
   delete db.history[code];
-  writeDb(db);
+  await saveDb(db);
   sendJson(response, 200, { state: adminState(db) });
 }
 
 async function handleTokenUpdate(request, response) {
   const payload = await readJson(request);
-  const db = readDb();
+  const db = await loadDb();
   db.tokenState.limit = Math.max(0, Number(payload.limit || 0));
-  writeDb(db);
+  await saveDb(db);
   sendJson(response, 200, { state: adminState(db) });
 }
 
 async function handleHistoryDelete(request, response) {
   const payload = await readJson(request);
   const code = normalizeAccessCode(payload.code);
-  const db = readDb();
+  const db = await loadDb();
   db.history[code] = (db.history[code] || []).filter((item) => String(item.id) !== String(payload.id));
-  writeDb(db);
+  await saveDb(db);
   sendJson(response, 200, { history: db.history[code] || [] });
 }
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/api/status") {
-    const db = readDb();
-    sendJson(response, 200, {
-      ok: true,
-      aiEnabled: Boolean(process.env.OPENAI_API_KEY),
-      model: process.env.OPENAI_MODEL || "gpt-4.1",
-      state: publicState(db)
-    });
+    try {
+      const db = await loadDb();
+      sendJson(response, 200, {
+        ok: true,
+        aiEnabled: Boolean(process.env.OPENAI_API_KEY),
+        model: process.env.OPENAI_MODEL || "gpt-4.1",
+        database: hasSupabase() ? "supabase" : "local",
+        state: publicState(db)
+      });
+    } catch (error) {
+      sendJson(response, 500, { ok: false, error: error.message || "Database tidak dapat dibaca." });
+    }
     return;
   }
 
@@ -384,13 +439,21 @@ const server = http.createServer((request, response) => {
   }
 
   if (request.method === "GET" && request.url === "/api/state") {
-    sendJson(response, 200, publicState(readDb()));
+    try {
+      sendJson(response, 200, publicState(await loadDb()));
+    } catch (error) {
+      sendJson(response, 500, { error: error.message || "Database tidak dapat dibaca." });
+    }
     return;
   }
 
   if (request.method === "GET" && request.url === "/api/admin/state") {
     if (!requireAdmin(request, response)) return;
-    sendJson(response, 200, adminState(readDb()));
+    try {
+      sendJson(response, 200, adminState(await loadDb()));
+    } catch (error) {
+      sendJson(response, 500, { error: error.message || "Database tidak dapat dibaca." });
+    }
     return;
   }
 
@@ -425,8 +488,12 @@ const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url.startsWith("/api/history")) {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const code = normalizeAccessCode(url.searchParams.get("code"));
-    const db = readDb();
-    sendJson(response, 200, { history: db.history[code] || [] });
+    try {
+      const db = await loadDb();
+      sendJson(response, 200, { history: db.history[code] || [] });
+    } catch (error) {
+      sendJson(response, 500, { error: error.message || "Database tidak dapat dibaca." });
+    }
     return;
   }
 

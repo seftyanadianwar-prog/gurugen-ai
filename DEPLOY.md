@@ -22,6 +22,8 @@ Anda membutuhkan:
 ```text
 OPENAI_API_KEY=isi_api_key_openai
 ADMIN_PIN=pin_admin_rahasia
+SUPABASE_URL=https://project-anda.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=isi_secret_key_supabase
 ```
 
 6. Deploy.
@@ -54,7 +56,7 @@ Ini sudah cukup untuk uji coba lokal dan demo terbatas. Untuk penggunaan banyak 
 3. Jalankan isi file `supabase-schema.sql`.
 4. Simpan `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY`.
 
-Tahap berikutnya pada kode adalah menghubungkan `serve.js` ke Supabase sebagai pengganti `data/gurugen-db.json`.
+Jika `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` sudah diisi di hosting, `serve.js` otomatis memakai Supabase. Jika belum diisi, aplikasi memakai `data/gurugen-db.json`.
 
 ## 5. Pengaturan keamanan wajib
 

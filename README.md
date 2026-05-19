@@ -95,7 +95,7 @@ Saat dibuka melalui `http://127.0.0.1:4173`, tombol `Generate Dokumen` akan mema
 
 ## Menuju versi publik
 
-Fondasi server lokal sudah dibuat. Agar bisa dibagikan ke guru lain lewat link publik, tahap berikutnya adalah memindahkan `data/gurugen-db.json` ke database online seperti Supabase/PostgreSQL, lalu deploy `serve.js` ke hosting seperti Render, Railway, VPS, atau layanan Node.js lain.
+Fondasi server lokal sudah dibuat. Jika `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` tersedia, server otomatis menyimpan data ke Supabase. Jika belum tersedia, server memakai `data/gurugen-db.json` sebagai cadangan lokal.
 
 Project sudah punya `package.json`, jadi di hosting Node.js perintah start-nya:
 
