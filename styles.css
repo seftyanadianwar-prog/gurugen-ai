@@ -63,17 +63,20 @@ button {
 }
 
 .brand {
-  padding: 0 0 18px;
+  gap: 14px;
+  padding: 4px 0 18px;
   min-width: 0;
 }
 
 .brand-logo {
   display: block;
-  width: min(100%, 300px);
-  height: auto;
-  border-radius: 14px;
-  object-fit: contain;
-  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.16);
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  object-fit: cover;
+  object-position: left center;
+  box-shadow: 0 16px 30px rgba(15, 118, 110, 0.18);
 }
 
 .brand-mark {
@@ -1196,8 +1199,8 @@ textarea:focus {
   }
 
   .brand-logo {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     object-fit: cover;
     object-position: left center;
   }
@@ -1246,8 +1249,8 @@ textarea:focus {
   }
 
   .brand-logo {
-    width: 56px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 10px;
     object-fit: cover;
     object-position: left center;
