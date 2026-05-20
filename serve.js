@@ -3,8 +3,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = __dirname;
-const port = Number(process.env.PORT || 4173);
-const host = process.env.HOST || (process.env.PORT ? "0.0.0.0" : "127.0.0.1");
 const dailyLimit = 5;
 const dataDir = path.join(root, "data");
 const dbPath = path.join(dataDir, "gurugen-db.json");
@@ -30,6 +28,9 @@ function loadEnvFile() {
 }
 
 loadEnvFile();
+
+const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || (process.env.PORT ? "0.0.0.0" : "127.0.0.1");
 
 function defaultDb() {
   return {
