@@ -64,12 +64,18 @@ let currentStep = 0;
 
 const docTitles = {
   LKPD: "LEMBAR KERJA PESERTA DIDIK (LKPD)",
-  "Modul Ajar": "MODUL AJAR",
-  ATP: "ALUR TUJUAN PEMBELAJARAN",
-  Prota: "PROGRAM TAHUNAN",
-  Promes: "PROGRAM SEMESTER",
+  "Modul Ajar": "MODUL AJAR / RPP",
+  "Pemetaan CP TP ATP": "PEMETAAN CP, TP, DAN ATP",
+  "Program Tahunan": "PROGRAM TAHUNAN (PROTA)",
+  "Program Semester": "PROGRAM SEMESTER (PROSEM)",
+  "Jurnal Mengajar": "JURNAL MENGAJAR HARIAN",
+  RME: "RINCIAN MINGGU EFEKTIF (RME)",
   KKTP: "KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN",
-  "Kisi-kisi Soal": "KISI-KISI SOAL"
+  "Asesmen Sumatif": "ASESMEN SUMATIF",
+  "Kisi-kisi Soal": "KISI-KISI SOAL",
+  "Kartu Soal": "KARTU SOAL",
+  "Kunci Jawaban": "KUNCI JAWABAN",
+  "Lembar Jawab": "LEMBAR JAWAB"
 };
 
 const months = ["Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -571,11 +577,17 @@ function getDocKey(docType) {
 const detailFieldMap = {
   LKPD: ["questionCount", "questionType", "learningModel", "assessment", "tone", "length"],
   "Modul Ajar": ["learningModel", "assessment", "tone", "length"],
-  ATP: ["assessment", "tone", "length"],
-  Prota: ["tone", "length"],
-  Promes: ["assessment", "tone", "length"],
-  KKTP: ["assessment", "tone", "length"],
-  "Kisi-kisi Soal": ["questionCount", "questionType", "assessment", "tone", "length"]
+  "Pemetaan CP TP ATP": ["documentScope", "assessment", "tone", "length"],
+  "Program Tahunan": ["documentScope", "effectiveWeeks", "tone", "length"],
+  "Program Semester": ["documentScope", "effectiveWeeks", "assessment", "tone", "length"],
+  "Jurnal Mengajar": ["documentScope", "effectiveWeeks", "assessment", "tone", "length"],
+  RME: ["documentScope", "effectiveWeeks", "tone", "length"],
+  KKTP: ["documentScope", "assessment", "tone", "length"],
+  "Asesmen Sumatif": ["questionCount", "questionType", "questionComposition", "documentScope", "assessment", "tone", "length"],
+  "Kisi-kisi Soal": ["questionCount", "questionType", "questionComposition", "assessment", "tone", "length"],
+  "Kartu Soal": ["questionCount", "questionType", "questionComposition", "assessment", "tone", "length"],
+  "Kunci Jawaban": ["questionCount", "questionType", "questionComposition", "assessment", "tone", "length"],
+  "Lembar Jawab": ["questionCount", "questionType", "questionComposition", "assessment", "tone", "length"]
 };
 
 function updateDetailFields() {
@@ -834,9 +846,9 @@ function closingNote(data) {
 
 function buildDocument(data) {
   if (data.docKey === "Modul Ajar") return buildModulAjar(data);
-  if (["ATP", "Prota", "Promes"].includes(data.docKey)) return buildPlanningTable(data);
+  if (["Pemetaan CP TP ATP", "Program Tahunan", "Program Semester", "Jurnal Mengajar", "RME"].includes(data.docKey)) return buildPlanningTable(data);
   if (data.docKey === "KKTP") return buildKktp(data);
-  if (data.docKey === "Kisi-kisi Soal") return buildKisi(data);
+  if (["Asesmen Sumatif", "Kisi-kisi Soal", "Kartu Soal", "Kunci Jawaban", "Lembar Jawab"].includes(data.docKey)) return buildKisi(data);
   return buildLkpd(data);
 }
 
@@ -906,6 +918,7 @@ function renderDraft() {
       <p><strong>Aktivitas:</strong></p>
       ${list(data.activities)}
       <p><strong>Soal latihan:</strong> Buat ${escapeHtml(getFormData().questionCount || "0")} soal sesuai materi. Jenis soal: ${escapeHtml(getFormData().questionType || "-")}.</p>
+      <p><strong>Lingkup/format:</strong> ${escapeHtml(getFormData().documentScope || "-")} ${getFormData().questionComposition ? `- ${escapeHtml(getFormData().questionComposition)}` : ""}</p>
       <p class="page-note">Bagian ini hanya pratinjau bahan prompt. Dokumen final akan dibuat oleh AI setelah tombol Generate Dokumen ditekan.</p>
     </section>
   `;

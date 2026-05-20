@@ -70,10 +70,16 @@ function supabaseHeaders() {
   };
 }
 
+function supabaseBaseUrl() {
+  const raw = String(process.env.SUPABASE_URL || "").trim();
+  const match = raw.match(/^https:\/\/[^/]+\.supabase\.co/i);
+  return (match ? match[0] : raw).replace(/\/$/, "");
+}
+
 async function loadDb() {
   if (!hasSupabase()) return readDb();
 
-  const baseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const baseUrl = supabaseBaseUrl();
   const response = await fetch(`${baseUrl}/rest/v1/gurugen_app_state?id=eq.main&select=data`, {
     headers: supabaseHeaders()
   });
@@ -96,7 +102,7 @@ async function saveDb(db) {
     return;
   }
 
-  const baseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const baseUrl = supabaseBaseUrl();
   const response = await fetch(`${baseUrl}/rest/v1/gurugen_app_state`, {
     method: "POST",
     headers: { ...supabaseHeaders(), Prefer: "resolution=merge-duplicates" },
@@ -185,21 +191,33 @@ function recordGenerate(db, user, data, html, source, tokens) {
   const docKey = Object.keys({
     LKPD: true,
     "Modul Ajar": true,
-    ATP: true,
-    Prota: true,
-    Promes: true,
+    "Pemetaan CP TP ATP": true,
+    "Program Tahunan": true,
+    "Program Semester": true,
+    "Jurnal Mengajar": true,
+    RME: true,
     KKTP: true,
-    "Kisi-kisi Soal": true
+    "Asesmen Sumatif": true,
+    "Kisi-kisi Soal": true,
+    "Kartu Soal": true,
+    "Kunci Jawaban": true,
+    "Lembar Jawab": true
   }).find((key) => String(data.docType || "").includes(key)) || "LKPD";
 
   const titleMap = {
     LKPD: "LEMBAR KERJA PESERTA DIDIK (LKPD)",
-    "Modul Ajar": "MODUL AJAR",
-    ATP: "ALUR TUJUAN PEMBELAJARAN",
-    Prota: "PROGRAM TAHUNAN",
-    Promes: "PROGRAM SEMESTER",
+    "Modul Ajar": "MODUL AJAR / RPP",
+    "Pemetaan CP TP ATP": "PEMETAAN CP, TP, DAN ATP",
+    "Program Tahunan": "PROGRAM TAHUNAN (PROTA)",
+    "Program Semester": "PROGRAM SEMESTER (PROSEM)",
+    "Jurnal Mengajar": "JURNAL MENGAJAR HARIAN",
+    RME: "RINCIAN MINGGU EFEKTIF (RME)",
     KKTP: "KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN",
-    "Kisi-kisi Soal": "KISI-KISI SOAL"
+    "Asesmen Sumatif": "ASESMEN SUMATIF",
+    "Kisi-kisi Soal": "KISI-KISI SOAL",
+    "Kartu Soal": "KARTU SOAL",
+    "Kunci Jawaban": "KUNCI JAWABAN",
+    "Lembar Jawab": "LEMBAR JAWAB"
   };
 
   const historyItem = {
@@ -235,6 +253,50 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function docFormatGuide(docType = "") {
+  const value = String(docType);
+  if (value.includes("Modul Ajar")) {
+    return "Ikuti contoh Modul Ajar/RPP: judul, identitas pembelajaran, identifikasi peserta didik dan materi, desain pembelajaran, langkah pembelajaran per kegiatan pendahuluan-inti-penutup, asesmen diagnostik/formatif/sumatif, LKPD/lampiran, rubrik, remedial, pengayaan, refleksi guru dan peserta didik.";
+  }
+  if (value.includes("Pemetaan CP")) {
+    return "Ikuti contoh Pemetaan CP, TP, dan ATP: metadata mata pelajaran/kelas/semester/tahun/satuan pendidikan, tabel Capaian Pembelajaran per elemen, lalu tabel ATP dengan kolom No Urut, Materi/Bab, TP (ABCD), ATP, dan Justifikasi Pengurutan, diakhiri blok tanda tangan.";
+  }
+  if (value.includes("Program Tahunan")) {
+    return "Ikuti contoh Prota: metadata mata pelajaran, satuan pendidikan, kelas/fase, tahun pelajaran, alokasi waktu total, lalu tabel No, Materi, Alokasi Waktu, Semester, dan blok tanda tangan.";
+  }
+  if (value.includes("Program Semester")) {
+    return "Ikuti contoh Prosem: metadata mata pelajaran, satuan pendidikan, kelas/fase, semester, tahun pelajaran, alokasi waktu, lalu tabel program dengan kolom No, Materi/ATP, Alokasi Waktu (JP), bulan-bulan semester terkait, minggu/pertemuan, keterangan/asesmen, dan tanda tangan.";
+  }
+  if (value.includes("Jurnal Mengajar")) {
+    return "Ikuti contoh Jurnal Mengajar Harian: metadata sekolah/guru/mapel/kelas/semester/tahun, lalu tabel Pertemuan ke-, Hari/Tanggal, Mata Pelajaran, Bab/Lingkup Materi, No ATP, Tujuan Pembelajaran, Materi Pokok, Penilaian/Asesmen, dan tanda tangan.";
+  }
+  if (value.includes("Rincian Minggu") || value.includes("RME")) {
+    return "Ikuti contoh RME Excel: judul Rincian Minggu Efektif dan Jumlah Jam Efektif, metadata sekolah/mapel/kelas-semester/tahun, tabel bulan dengan jumlah minggu, minggu tidak efektif, minggu efektif, rekap jumlah jam efektif, distribusi jam per materi, dan tanda tangan.";
+  }
+  if (value.includes("KKTP")) {
+    return "Ikuti contoh KKTP: metadata identitas, tabel No Urut, TP, Kurang (0-59), Cukup (60-74), Baik (75-84), Amat Baik (85-100), keterangan ketuntasan, dan tanda tangan.";
+  }
+  if (value.includes("Asesmen Sumatif")) {
+    return "Ikuti contoh Asesmen Sumatif: judul asesmen semester, tahun ajaran, identitas, petunjuk umum, kisi-kisi asesmen dalam tabel No, TP, Materi Pokok, Indikator Soal, Level Kognitif, Bentuk Soal, Pengalaman Belajar, lalu soal asesmen per bagian sesuai komposisi, rubrik/pedoman penskoran, rentang nilai, dan kunci jawaban bila diminta.";
+  }
+  if (value.includes("Kisi-kisi")) {
+    return "Ikuti contoh Kisi-kisi ASAS: judul, sekolah, tahun pelajaran, metadata satuan pendidikan, bentuk soal, mata pelajaran, kelas/semester, alokasi waktu, jumlah soal, lalu tabel No, Tujuan Pembelajaran, IPK, Konten, Konteks, Level Kognitif, Indikator Soal, Bentuk Soal, Nomor Soal, catatan verifikasi, dan tanda tangan.";
+  }
+  if (value.includes("Kartu Soal")) {
+    return "Ikuti contoh Kartu Soal: untuk tiap soal buat kartu berisi header sekolah/tahun, tabel Tujuan Pembelajaran, No Soal, Kunci, Buku Sumber, rumusan butir soal, opsi jawaban bila PG, materi, indikator, level kognitif, bentuk soal, skor, dan tabel keterangan soal untuk analisis tingkat kesukaran/daya pembeda.";
+  }
+  if (value.includes("Kunci Jawaban")) {
+    return "Ikuti contoh Kunci Jawaban: kop/identitas sekolah, judul kunci jawaban, metadata mapel/kelas/hari/waktu, tabel jawaban PG, PG kompleks, Benar/Salah, Sesuai/Tidak Sesuai, lalu pembahasan atau pedoman penskoran uraian.";
+  }
+  if (value.includes("Lembar Jawab")) {
+    return "Ikuti contoh Lembar Jawab: kop/identitas sekolah, judul lembar jawab, metadata mapel/kelas/hari/waktu, kotak nama dan nilai, tabel pilihan A-D untuk PG, tabel centang untuk PG kompleks, tabel benar/salah, tabel sesuai/tidak sesuai, dan ruang garis untuk uraian.";
+  }
+  if (value.includes("LKPD")) {
+    return "Ikuti format LKPD: identitas, tujuan, petunjuk, aktivitas peserta didik, lembar kerja/tugas, soal latihan, refleksi, dan rubrik.";
+  }
+  return "Ikuti format administrasi pembelajaran guru Indonesia yang rapi, siap cetak, bertabel bila diperlukan, dan diakhiri tanda tangan bila dokumennya administratif.";
+}
+
 function buildPrompt(data) {
   const payload = {
     jenis_dokumen: data.docType,
@@ -258,8 +320,11 @@ function buildPrompt(data) {
       aktivitas_pembelajaran: data.activities,
       soal_latihan: {
         jumlah_soal: data.questionCount,
-        jenis_soal: data.questionType
+        jenis_soal: data.questionType,
+        komposisi_soal: data.questionComposition
       },
+      lingkup_dokumen: data.documentScope,
+      jumlah_minggu_atau_pertemuan: data.effectiveWeeks,
       model_pembelajaran: data.learningModel,
       asesmen: data.assessment,
       gaya_bahasa: data.tone,
@@ -281,10 +346,17 @@ ATURAN PENTING:
 4. Sesuaikan struktur dengan jenis dokumen:
    - LKPD: identitas, tujuan, petunjuk, aktivitas peserta didik, lembar kerja/tugas, refleksi, rubrik.
    - Modul Ajar: informasi umum, kompetensi awal, tujuan, pemahaman bermakna, pertanyaan pemantik, langkah pembelajaran, asesmen, pengayaan/remedial.
-   - ATP: capaian/tujuan, alur tujuan, urutan materi, estimasi waktu, asesmen.
-   - Prota/Promes: tabel program waktu, materi, tujuan, kegiatan, asesmen.
+   - Pemetaan CP TP ATP: tabel CP per elemen dan tabel ATP berisi No Urut, Materi/Bab, TP, ATP, Justifikasi Pengurutan.
+   - Prota: tabel No, Materi, Alokasi Waktu, Semester.
+   - Prosem: tabel No, Materi/ATP, Alokasi Waktu, bulan/minggu semester, dan keterangan.
+   - Jurnal Mengajar: tabel Pertemuan, Hari/Tanggal, Mata Pelajaran, Bab/Materi, No ATP, TP, Materi Pokok, Asesmen.
+   - RME: tabel jumlah minggu, minggu tidak efektif, minggu efektif, rekap jam efektif, dan distribusi jam.
    - KKTP: tujuan, indikator/kriteria, interval/level ketercapaian, tindak lanjut.
-   - Kisi-kisi Soal: tujuan penilaian, indikator soal, bentuk soal, level kognitif, skor, pedoman penskoran.
+   - Asesmen Sumatif: identitas, petunjuk, kisi-kisi, soal per bagian, rubrik/pedoman, rentang nilai.
+   - Kisi-kisi Soal: tabel No, Tujuan Pembelajaran, IPK, Konten, Konteks, Level Kognitif, Indikator Soal, Bentuk Soal, Nomor Soal.
+   - Kartu Soal: kartu per butir soal berisi TP, no soal, kunci, sumber, materi, indikator, level, bentuk, skor, dan analisis.
+   - Kunci Jawaban: tabel jawaban dan pembahasan/pedoman penskoran uraian.
+   - Lembar Jawab: identitas peserta, tabel jawaban PG/PG kompleks/benar-salah/sesuai-tidak sesuai, dan ruang uraian.
 5. Jika jumlah soal latihan lebih dari 0, buat bagian "Soal Latihan" sebanyak jumlah tersebut dan sesuai jenis soal yang dipilih: uraian, isian singkat, pilihan ganda, tabel, studi kasus, atau campuran.
 6. Untuk pilihan ganda, sertakan opsi A-D dan kunci jawaban di bagian akhir dokumen.
 7. Untuk studi kasus, buat kasus kontekstual sesuai materi dan pertanyaan turunannya.
@@ -292,6 +364,9 @@ ATURAN PENTING:
 9. Jangan menyebut bahwa dokumen dibuat dari prompt.
 10. Jangan membuat markdown.
 11. Kembalikan hanya fragmen HTML aman untuk dimasukkan ke <article>. Gunakan tag h1, h2, section, h3, h4, p, ol, ul, li, dl, dt, dd, table, thead, tbody, tr, th, td. Jangan gunakan script, style, iframe, atau atribut event.
+
+FORMAT KHUSUS BERDASARKAN FILE CONTOH:
+${docFormatGuide(data.docType)}
 
 DATA PENGGUNA:
 ${JSON.stringify(payload, null, 2)}
@@ -330,7 +405,7 @@ async function handleGenerate(request, response) {
         model: process.env.OPENAI_MODEL || "gpt-4.1",
         instructions: "Anda adalah asisten ahli kurikulum dan perangkat ajar untuk guru Indonesia. Selalu hasilkan dokumen final yang kaya isi, bukan ringkasan input.",
         input: buildPrompt(data),
-        max_output_tokens: 4500
+        max_output_tokens: 7000
       })
     });
 

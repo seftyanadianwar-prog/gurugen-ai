@@ -105,7 +105,7 @@
           </div>
           <div class="welcome-card">
             <h3>Generator Dokumen Guru</h3>
-            <p>Buat LKPD, modul ajar, ATP, Prota, Promes, KKTP, dan kisi-kisi soal dari satu form terstruktur.</p>
+            <p>Buat perangkat ajar, administrasi semester, RME, asesmen, kisi-kisi, kartu soal, kunci, dan lembar jawab dari satu form terstruktur.</p>
             <div class="feature-list">
               <span>Generate 5 dokumen per hari</span>
               <span>Ekspor Word dan PDF</span>
@@ -227,12 +227,18 @@
                   Jenis Dokumen
                   <select name="docType">
                     <option>LKPD (Lembar Kerja Peserta Didik)</option>
-                    <option>Modul Ajar</option>
-                    <option>ATP</option>
-                    <option>Prota</option>
-                    <option>Promes</option>
+                    <option>Modul Ajar / RPP</option>
+                    <option>Pemetaan CP TP ATP</option>
+                    <option>Program Tahunan (Prota)</option>
+                    <option>Program Semester (Prosem)</option>
+                    <option>Jurnal Mengajar Harian</option>
+                    <option>Rincian Minggu Efektif (RME)</option>
                     <option>KKTP</option>
+                    <option>Asesmen Sumatif</option>
                     <option>Kisi-kisi Soal</option>
+                    <option>Kartu Soal</option>
+                    <option>Kunci Jawaban</option>
+                    <option>Lembar Jawab</option>
                   </select>
                 </label>
                 <label>
@@ -303,6 +309,23 @@ Menggunakan Microsoft Excel untuk mengolah data sederhana</textarea>
                     <option>Formatif dan produk</option>
                     <option>Observasi dan rubrik</option>
                   </select>
+                </label>
+                <label data-detail-field="documentScope">
+                  Lingkup Dokumen
+                  <select name="documentScope">
+                    <option>Semester 1 (Ganjil)</option>
+                    <option>Semester 2 (Genap)</option>
+                    <option>Tahunan</option>
+                    <option>Paket asesmen lengkap</option>
+                  </select>
+                </label>
+                <label data-detail-field="effectiveWeeks">
+                  Jumlah Minggu/Pertemuan
+                  <input name="effectiveWeeks" type="number" min="1" max="60" value="15" />
+                </label>
+                <label data-detail-field="questionComposition">
+                  Komposisi Soal
+                  <textarea name="questionComposition" rows="3">15 PG tunggal, 10 PG kompleks, 5 benar/salah, 5 sesuai/tidak sesuai, 5 uraian</textarea>
                 </label>
                 <label data-detail-field="tone">
                   Gaya Bahasa
